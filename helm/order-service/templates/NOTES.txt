@@ -1,0 +1,3 @@
+Order service deployed.
+
+Health: kubectl port-forward svc/{{ include "order-service.fullname" . }} 8080:{{ .Values.service.port }}
