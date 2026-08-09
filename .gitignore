@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+
+# Build
+dist/
+*.egg-info/
+
+# IDE
+.vscode/
+.idea/
+
+# Local kube
+kubeconfig.local
