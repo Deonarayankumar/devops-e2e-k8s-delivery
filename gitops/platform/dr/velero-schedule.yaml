@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: velero
+---
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: shop-daily
+  namespace: velero
+spec:
+  schedule: "0 2 * * *"
+  template:
+    includedNamespaces:
+      - shop
+      - observability
+    includedResources: ["*"]
+    snapshotVolumes: true
+    ttl: 168h0m0s
+    storageLocation: azure-blob
+    volumeSnapshotLocations:
+      - azure-disk
+---
+apiVersion: velero.io/v1
+kind: BackupStorageLocation
+metadata:
+  name: azure-blob
+  namespace: velero
+spec:
+  provider: azure
+  objectStorage:
+    bucket: velero
+  config:
+    resourceGroup: k8splat-rg
+    storageAccount: k8splatdata
+    subscriptionId: "${AZURE_SUBSCRIPTION_ID}"

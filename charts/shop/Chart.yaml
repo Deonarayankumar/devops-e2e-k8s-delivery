@@ -1,0 +1,6 @@
+apiVersion: v2
+name: shop
+description: Frontend, backend, and supporting Kubernetes objects for the shop platform
+type: application
+version: 0.2.0
+appVersion: "2.0.0"

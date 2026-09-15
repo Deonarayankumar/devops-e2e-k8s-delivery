@@ -1,0 +1,6 @@
+strategy: rolling
+hpa:
+  minReplicas: 2
+  maxReplicas: 8
+gateway:
+  hostname: shop.example.com

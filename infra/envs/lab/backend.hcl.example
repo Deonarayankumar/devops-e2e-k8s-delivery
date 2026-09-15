@@ -1,0 +1,4 @@
+resource_group_name  = "k8splat-tfstate-rg"
+storage_account_name = "k8splattfstate"
+container_name       = "tfstate"
+key                  = "lab.terraform.tfstate"
