@@ -1,5 +1,5 @@
 name_prefix       = "k8splat"
 location          = "eastus"
 github_org        = "Deonarayankumar"
-github_repo       = "devops-e2e-k8s-delivery"
+github_repo       = "production-grade-kubernetes-platform"
 public_zone_name  = "example.com"
