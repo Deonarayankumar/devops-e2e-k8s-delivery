@@ -8,7 +8,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/Deonarayankumar/devops-e2e-k8s-delivery.git
+    repoURL: https://github.com/Deonarayankumar/production-grade-kubernetes-platform.git
     targetRevision: main
     path: charts/shop
     helm:

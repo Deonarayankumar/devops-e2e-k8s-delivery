@@ -15,7 +15,7 @@ variable "github_org" {
 
 variable "github_repo" {
   type    = string
-  default = "devops-e2e-k8s-delivery"
+  default = "production-grade-kubernetes-platform"
 }
 
 variable "public_zone_name" {
@@ -26,7 +26,7 @@ variable "public_zone_name" {
 variable "tags" {
   type = map(string)
   default = {
-    project    = "devops-e2e-k8s-delivery"
+    project    = "production-grade-kubernetes-platform"
     period     = "2026-07-2026-08"
     managed_by = "terraform"
   }

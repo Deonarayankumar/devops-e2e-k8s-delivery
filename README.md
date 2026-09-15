@@ -1,4 +1,4 @@
-# Production-ready Kubernetes platform
+# Production-Grade Kubernetes Platform
 
 Flagship lab (**July 2026 – August 2026**): Terraform on Azure, GitOps with Argo CD, Gateway API, observability, and automated disaster recovery — not a single “app on Kubernetes” deploy.
 
