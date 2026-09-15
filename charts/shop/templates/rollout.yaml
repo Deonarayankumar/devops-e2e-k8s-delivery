@@ -1,0 +1,66 @@
+{{- if ne .Values.strategy "rolling" }}
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: shop-backend
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: shop-backend
+    {{ include "shop.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.backend.replicaCount }}
+  selector:
+    matchLabels:
+      app: shop-backend
+  template:
+    metadata:
+      labels:
+        app: shop-backend
+        {{ include "shop.labels" . | nindent 8 }}
+    spec:
+      serviceAccountName: shop-backend
+      containers:
+        - name: backend
+          image: "{{ .Values.images.backend.repository }}:{{ .Values.images.backend.tag }}"
+          imagePullPolicy: {{ .Values.images.backend.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.backend.port }}
+          envFrom:
+            - configMapRef:
+                name: shop-backend
+            - secretRef:
+                name: shop-backend
+          env:
+            - name: BUILD_ID
+              value: {{ .Values.images.backend.tag | quote }}
+          resources:
+            {{- toYaml .Values.backend.resources | nindent 12 }}
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.backend.port }}
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: {{ .Values.backend.port }}
+  {{- if eq .Values.strategy "canary" }}
+  strategy:
+    canary:
+      steps:
+        - setWeight: 20
+        - pause: { duration: 60 }
+        - setWeight: 50
+        - pause: { duration: 60 }
+      analysis:
+        templates:
+          - templateName: shop-success-rate
+        startingStep: 1
+  {{- else if eq .Values.strategy "blueGreen" }}
+  strategy:
+    blueGreen:
+      activeService: shop-backend
+      previewService: shop-backend-preview
+      autoPromotionEnabled: false
+      scaleDownDelaySeconds: 30
+  {{- end }}
+{{- end }}

@@ -1,0 +1,10 @@
+frontend:
+  replicaCount: 1
+backend:
+  replicaCount: 1
+hpa:
+  minReplicas: 1
+  maxReplicas: 3
+gateway:
+  hostname: shop.lab.local
+strategy: rolling

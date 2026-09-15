@@ -1,0 +1,46 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-alerting
+  namespace: observability
+data:
+  contactpoints.yaml: |
+    apiVersion: 1
+    contactPoints:
+      - orgId: 1
+        name: slack-pager
+        receivers:
+          - uid: slack-main
+            type: slack
+            settings:
+              url: ${SLACK_WEBHOOK_URL}
+          - uid: pagerduty-main
+            type: pagerduty
+            settings:
+              integrationKey: ${PAGERDUTY_ROUTING_KEY}
+  alert-rules.yaml: |
+    apiVersion: 1
+    groups:
+      - orgId: 1
+        name: shop
+        folder: shop
+        interval: 1m
+        rules:
+          - uid: shop-high-error
+            title: Shop backend error rate
+            condition: A
+            data:
+              - refId: A
+                relativeTimeRange:
+                  from: 300
+                  to: 0
+                datasourceUid: prometheus
+                model:
+                  expr: sum(rate(http_requests_total{app="shop-backend",code=~"5.."}[5m])) > 0.05
+            noDataState: OK
+            execErrState: Alerting
+            for: 2m
+            annotations:
+              summary: Backend 5xx rate is elevated
+            labels:
+              severity: page

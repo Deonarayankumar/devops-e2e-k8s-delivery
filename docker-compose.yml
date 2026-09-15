@@ -1,0 +1,22 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: shop
+      POSTGRES_USER: shop
+      POSTGRES_PASSWORD: shop
+    ports:
+      - "5432:5432"
+  backend:
+    build: apps/backend
+    environment:
+      DATABASE_URL: postgresql://shop:shop@postgres:5432/shop
+      BUILD_ID: local
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+  frontend:
+    build: apps/frontend
+    ports:
+      - "8081:8080"

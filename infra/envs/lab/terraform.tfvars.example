@@ -1,0 +1,5 @@
+name_prefix       = "k8splat"
+location          = "eastus"
+github_org        = "Deonarayankumar"
+github_repo       = "devops-e2e-k8s-delivery"
+public_zone_name  = "example.com"

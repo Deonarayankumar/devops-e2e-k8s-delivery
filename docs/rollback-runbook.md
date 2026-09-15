@@ -1,23 +1,9 @@
-# Rollback Runbook
+# Rollback runbook
 
-## When to rollback
+Use this when a shop release is unhealthy after sync.
 
-- Smoke tests fail after Helm upgrade
-- Error rate spike in Application Insights
-- Pod crash loop after image tag change
-
-## Steps
-
-1. Identify release: `helm history order-service -n <namespace>`
-2. Run rollback script:
-   ```bash
-   ./scripts/rollback.sh order-service staging
-   # or pin revision:
-   ./scripts/rollback.sh order-service production 4
-   ```
-3. Verify: `./scripts/smoke-test.sh <url>`
-4. Post-incident: document root cause in team channel
-
-## Pipeline rollback
-
-Re-run Azure DevOps release with previous `Build.BuildId` image tag or trigger `helm rollback` from an approved ops job.
+1. Confirm Argo CD application health: `argocd app get shop-prod`
+2. Rolling: `kubectl -n shop rollout undo deployment/shop-backend`
+3. Canary / blue-green: `kubectl argo rollouts undo shop-backend -n shop` or `./scripts/rollback.sh shop shop`
+4. Smoke: `./scripts/smoke-test.sh https://shop.example.com/api/health`
+5. If the cluster is the problem, restore from Velero: [disaster-recovery.md](disaster-recovery.md)
