@@ -1,0 +1,14 @@
+{{- if eq .Values.strategy "blueGreen" }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: shop-backend-preview
+  namespace: {{ .Values.namespace }}
+spec:
+  selector:
+    app: shop-backend
+  ports:
+    - name: http
+      port: 80
+      targetPort: {{ .Values.backend.port }}
+{{- end }}

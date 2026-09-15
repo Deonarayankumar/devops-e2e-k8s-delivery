@@ -1,0 +1,116 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main, master]
+  push:
+    branches: [main, master]
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install and test
+        run: |
+          python -m pip install -r requirements-dev.txt
+          pytest -q
+
+  helm:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/setup-helm@v4
+        with:
+          version: v3.16.3
+      - name: Lint and template
+        run: |
+          helm lint charts/shop
+          helm template shop charts/shop -f charts/shop/values.yaml -f charts/shop/values-prod.yaml > /tmp/shop.yaml
+          test -s /tmp/shop.yaml
+
+  terraform:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.9.8"
+      - name: Format and validate modules
+        run: |
+          terraform fmt -check -recursive infra
+          terraform -chdir=infra/bootstrap init -backend=false
+          terraform -chdir=infra/bootstrap validate
+
+  images:
+    needs: [test]
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - name: backend
+            context: apps/backend
+          - name: frontend
+            context: apps/frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Build
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.context }}
+          push: false
+          tags: shop-${{ matrix.name }}:${{ github.sha }}
+          load: true
+      - name: Trivy scan
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: shop-${{ matrix.name }}:${{ github.sha }}
+          format: table
+          exit-code: "0"
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+
+  gitops-values:
+    needs: [images, helm]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Render GitOps image pin
+        run: |
+          TAG="sha-${GITHUB_SHA::12}"
+          python - <<'PY'
+          from pathlib import Path
+          import os
+          tag = os.environ["TAG"]
+          path = Path("charts/shop/values.yaml")
+          text = path.read_text(encoding="utf-8")
+          lines = []
+          in_images = False
+          for line in text.splitlines():
+              if line.startswith("images:"):
+                  in_images = True
+              if in_images and line.strip().startswith("tag:"):
+                  indent = line[: len(line) - len(line.lstrip())]
+                  lines.append(f'{indent}tag: "{tag}"')
+                  continue
+              lines.append(line)
+          Path("shop-values.pinned.yaml").write_text("\n".join(lines) + "\n", encoding="utf-8")
+          print(f"Pinned image tag {tag} (apply by copying into charts/shop/values.yaml)")
+          PY
+        env:
+          TAG: sha-${{ github.sha }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: helm-values-pin
+          path: shop-values.pinned.yaml

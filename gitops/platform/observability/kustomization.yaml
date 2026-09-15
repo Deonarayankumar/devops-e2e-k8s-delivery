@@ -1,0 +1,7 @@
+# kube-prometheus-stack, Tempo, Loki, and Grafana are installed via Helm
+# (documented in docs/architecture.md). This kustomization tracks in-repo add-ons.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - otel-collector.yaml
+  - alerting.yaml

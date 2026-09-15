@@ -1,0 +1,66 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: require-probes-and-resources
+spec:
+  validationFailureAction: Enforce
+  background: true
+  rules:
+    - name: require-probes
+      match:
+        any:
+          - resources:
+              kinds: ["Pod"]
+              namespaces: ["shop", "shop-staging"]
+      validate:
+        message: Liveness and readiness probes are required.
+        pattern:
+          spec:
+            containers:
+              - livenessProbe:
+                  httpGet:
+                    path: "?*"
+                readinessProbe:
+                  httpGet:
+                    path: "?*"
+    - name: require-resources
+      match:
+        any:
+          - resources:
+              kinds: ["Pod"]
+              namespaces: ["shop", "shop-staging"]
+      validate:
+        message: CPU and memory requests/limits are required.
+        pattern:
+          spec:
+            containers:
+              - resources:
+                  requests:
+                    memory: "?*"
+                    cpu: "?*"
+                  limits:
+                    memory: "?*"
+                    cpu: "?*"
+---
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: disallow-latest-tag
+spec:
+  validationFailureAction: Audit
+  rules:
+    - name: no-latest
+      match:
+        any:
+          - resources:
+              kinds: ["Pod"]
+      validate:
+        message: Image tags must be immutable (not latest).
+        foreach:
+          - list: "request.object.spec.containers"
+            deny:
+              conditions:
+                all:
+                  - key: "{{ element.image }}"
+                    operator: Equals
+                    value: "*:latest"

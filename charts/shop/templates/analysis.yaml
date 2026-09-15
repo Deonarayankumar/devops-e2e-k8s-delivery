@@ -1,0 +1,20 @@
+{{- if or (eq .Values.strategy "canary") (eq .Values.strategy "blueGreen") }}
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: shop-success-rate
+  namespace: {{ .Values.namespace }}
+spec:
+  metrics:
+    - name: success-rate
+      interval: 30s
+      successCondition: result[0] >= 0.95
+      failureLimit: 3
+      provider:
+        prometheus:
+          address: http://kube-prometheus-stack-prometheus.observability.svc.cluster.local:9090
+          query: |
+            sum(rate(http_requests_total{app="shop-backend",code!~"5.."}[1m]))
+            /
+            sum(rate(http_requests_total{app="shop-backend"}[1m]))
+{{- end }}

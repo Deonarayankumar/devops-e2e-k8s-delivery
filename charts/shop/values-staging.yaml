@@ -1,0 +1,6 @@
+strategy: canary
+hpa:
+  minReplicas: 2
+  maxReplicas: 6
+gateway:
+  hostname: shop.staging.example.com

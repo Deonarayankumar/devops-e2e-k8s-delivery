@@ -9,9 +9,24 @@ venv/
 dist/
 *.egg-info/
 
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+crash.log
+override.tf
+backend.hcl
+
+# Helm / kube
+*.tgz
+kubeconfig.local
+
+# Secrets and env
+.env
+*.pem
+*.key
+
 # IDE
 .vscode/
 .idea/
-
-# Local kube
-kubeconfig.local
